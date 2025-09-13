@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NSW Rental Bond Refunds — 2024</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>NSW Rental Bond Refunds — 2024</h1>
+      <p class="subtle">Colour encodes rank by the selected sort metric <span class="legend-label">(green = low, red = high)</span>.</p>
+    </div>
+    <div class="legend">
+      <span>Lower</span>
+      <div class="gradient"></div>
+      <span>Higher</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="controls">
+      <section class="card sort-card">
+        <h2>Sort</h2>
+        <div class="control-flex">
+          <div class="control-block"><label>Sort by</label>
+            <select id="sortBy">
+              <option value="percent">Percent of bond withheld from tenant</option>
+              <option value="withheld">Percent of rentals with any bond withheld from tenant</option>
+              <option value="days">Average days bond held</option>
+              <option value="bond">Average total bond</option>
+            </select>
+          </div>
+          <div class="control-block"><label>Direction</label>
+            <select id="sortDir">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Filters</h2>
+        <div class="control-block">
+          <label>Dwelling type</label>
+          <div class="chips" id="dwellingTypes">
+            <label><input type="checkbox" value="F" checked> Flat/unit</label>
+            <label><input type="checkbox" value="H" checked> House</label>
+            <label><input type="checkbox" value="T" checked> Terrace/townhouse</label>
+            <label><input type="checkbox" value="O" checked> Other</label>
+            <label><input type="checkbox" value="U" checked> Unknown</label>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label>Days bond held</label>
+          <div id="sliderDays"></div>
+          <div class="range-vals">
+            <input id="daysMin" type="number" step="1" placeholder="Min">
+            <span>to</span>
+            <input id="daysMax" type="number" step="1" placeholder="Max">
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label>Data points per postcode</label>
+          <div id="sliderCount"></div>
+          <div class="range-vals">
+            <input id="countMin" type="number" step="1" placeholder="Min">
+            <span>to</span>
+            <input id="countMax" type="number" step="1" placeholder="Max">
+          </div>
+        </div>
+
+        <details class="advanced">
+          <summary>More filters</summary>
+
+          <div class="control-block">
+            <label>Percent of bond withheld from tenant</label>
+            <div id="sliderPercent"></div>
+            <div class="range-vals">
+              <input id="percentMin" type="number" step="0.1" placeholder="Min">
+              <span>to</span>
+              <input id="percentMax" type="number" step="0.1" placeholder="Max">
+            </div>
+          </div>
+
+          <div class="control-block">
+            <label>Percent of rentals with any bond withheld from tenant</label>
+            <div id="sliderWithheld"></div>
+            <div class="range-vals">
+              <input id="withheldMin" type="number" step="0.1" placeholder="Min">
+              <span>to</span>
+              <input id="withheldMax" type="number" step="0.1" placeholder="Max">
+            </div>
+          </div>
+
+          <div class="control-block">
+            <label>Average total bond (AUD)</label>
+            <div id="sliderBond"></div>
+            <div class="range-vals">
+              <input id="bondMin" type="number" step="1" placeholder="Min">
+              <span>to</span>
+              <input id="bondMax" type="number" step="1" placeholder="Max">
+            </div>
+          </div>
+
+        </details>
+
+        <div class="control-actions">
+          <button id="resetBtn">Reset filters</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Summary</h2>
+        <div id="summary"></div>
+      </section>
+    </aside>
+
+    <section class="viz">
+      <div id="map"></div>
+      <section class="list card">
+        <h2>Bond outcomes</h2>
+        <div id="cards"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <button id="aboutBtn" class="linklike">About & licensing</button>
+      <span class="sep">•</span>
+      Code: <a href="./LICENSE">MIT</a>.
+      Data: <a href="./data/LICENSE">sources & CC BY 4.0 attributions</a>.
+      Third-party: <a href="./THIRD_PARTY_NOTICES.md">notices</a>.
+      Map tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
+    </p>
+  </footer>
+
+  <!-- About & licensing modal -->
+  <div id="aboutModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="aboutTitle">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-dialog" role="document">
+      <header class="modal-head">
+        <h3 id="aboutTitle">About & licensing</h3>
+        <button class="close" title="Close" aria-label="Close modal">×</button>
+      </header>
+      <div class="modal-body">
+        <p><strong>Purpose.</strong> This map helps NSW renters explore where bonds are fully refunded or withheld.</p>
+        <p><strong>Code licence.</strong> The site code is licensed under the <a href="./LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+        <p><strong>Data & attribution (CC BY 4.0 unless noted):</strong></p>
+        <ul>
+          <li>ABS ASGS 2021 <em>POA</em> boundaries — <a href="https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/digital-boundary-files" target="_blank" rel="noopener">Digital boundary files</a>.</li>
+          <li>ASGS 2021 geographic correspondences — <a href="https://data.gov.au/data/dataset/asgs-edition-3-2021-correspondences" target="_blank" rel="noopener">data.gov.au dataset</a>.</li>
+          <li>NSW Rental bond refunds — <a href="https://www.nsw.gov.au/housing-and-construction/rental-forms-surveys-and-data/rental-bond-data#toc-bond-refunds" target="_blank" rel="noopener">NSW Government bond data hub</a> (e.g. 2024 workbook).</li>
+        </ul>
+        <p>See <a href="./data/LICENSE">data/LICENSE</a> for full wording. No endorsement by data providers is implied.</p>
+        <p><strong>Libraries & tiles.</strong> Leaflet (BSD-2-Clause), noUiSlider (MIT), wNumb (MIT), Papa Parse (MIT). Map tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors. Details in <a href="./THIRD_PARTY_NOTICES.md">THIRD_PARTY_NOTICES.md</a>.</p>
+        <p class="muted">This tool summarises historic outcomes only; high withholding can reflect multiple factors and is not proof of misconduct.</p>
+      </div>
+      <footer class="modal-foot">
+        <button class="close primary">Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wNumb/1.2.0/wNumb.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

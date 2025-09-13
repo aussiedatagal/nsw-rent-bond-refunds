@@ -1,0 +1,16 @@
+Data licensing & sources (CC BY 4.0)
+
+All files in this `./data` folder are reused under Creative Commons Attribution 4.0 International (CC BY 4.0) from the sources below. 
+Changes include: format conversion, NSW subsetting, postcode aggregation and cleaning. No endorsement by the data providers is implied.
+
+• ABS ASGS 2021 POA boundaries (NSW subset) — © Commonwealth of Australia (Australian Bureau of Statistics) 2021–2023 — CC BY 4.0  
+  Source: Australian Statistical Geography Standard (ASGS) — Digital boundary files  
+  https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/digital-boundary-files
+
+• ASGS correspondences (CG_LOCALITY_2021 ↔ POA_2021) — © Commonwealth of Australia — CC BY 4.0  
+  Dataset: https://www.data.gov.au/data/dataset/asgs-edition-3-2021-correspondences
+
+• NSW Rental bond refunds (2024) — © State of New South Wales (NSW Fair Trading) — CC BY 4.0 (except as noted)  
+  Hub: https://www.nsw.gov.au/housing-and-construction/rental-forms-surveys-and-data/rental-bond-data#toc-bond-refunds
+
+License text: https://creativecommons.org/licenses/by/4.0/
