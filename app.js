@@ -1,4 +1,4 @@
-/* NSW Rental Bonds Explorer (static) */
+/* NSW Rental Bonds Explorer */
 function titleCaseSuburbs(s){
   if(!s) return "";
   const parts = s.split(',').map(p => p.trim().toLowerCase()).filter(Boolean);
@@ -21,7 +21,7 @@ function arrMax(arr, fallback=0){ let m=-Infinity; for(let i=0;i<arr.length;i++)
 function ensureSpan(min, max, eps=1){ if(!Number.isFinite(min))min=0; if(!Number.isFinite(max))max=min+eps; if(min===max)return [min,min+eps]; if(min>max)return [max,min]; return [min,max]; }
 
 let RAW = { rows: [], suburbs: new Map(), poa: null };
-let MAP = { map: null, layer: null, featureIndex: new Map(), aggByPc: null, rankIndex: null, rankN: 0 };
+let MAP = { map: null, layer: null, featureIndex: new Map(), aggByPc: null, rankIndex: null, rankN: 0, legendEl: null };
 let UI = {};
 let FILTERS = { dwellings: new Set(['F','H','T','O','U']), percent: [0,100], withheld: [0,100], days: [0,2000], bond: [0,10000], count: [20, 999999], sortBy: 'percent', sortDir: 'asc' };
 
@@ -29,17 +29,34 @@ const bondValue = r => (r['Payment To Agent'] ?? 0) + (r['Payment To Tenant'] ??
 function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
 function colorByRank(rankRatio){ const h = (1 - rankRatio) * 120; return `hsl(${h}, 70%, 55%)`; }
 function toKey(pc){ return String(pc).padStart(4,'0'); }
+
+function legendLabelPair(key, dir){
+  const map = {
+    percent: ['lower % withheld','higher % withheld'],
+    withheld: ['less frequent withholding','more frequent withholding'],
+    days: ['shorter tenancies','longer tenancies'],
+    bond: ['smaller total bond','larger total bond'],
+  };
+  const pair = map[key] || ['lower','higher'];
+  return dir === 'asc' ? pair : [pair[1], pair[0]];
+}
+function updateLegend(){
+  if(!MAP.legendEl) return;
+  const [left,right] = legendLabelPair(FILTERS.sortBy, FILTERS.sortDir);
+  MAP.legendEl.innerHTML = `<span>${left}</span><div class="gradient"></div><span>${right}</span>`;
+}
+
 function getSuburbName(pc){ return RAW.suburbs.get(Number(pc)) || ''; }
 function displayName(pc){ const s = getSuburbName(pc); return s && s.length ? s : `Postcode ${pc}`; }
 
 function summaryHTML(s){
   return `<div class="kv">
     <div><span class="badge">Records</span> ${fmtNum.format(s.records)}</div>
-    <div><span class="badge">Bond data items</span> ${fmtNum.format(s.postcodes)}</div>
+    <div><span class="badge">Postcodes</span> ${fmtNum.format(s.postcodes)}</div>
     <div><span class="badge">Percent of bond withheld from tenant</span> ${fmtPct1.format(s.avgPercent)}%</div>
-    <div><span class="badge">Average days bond held</span> ${fmtNum.format(s.avgDays)}</div>
-    <div><span class="badge">Average total bond (AUD)</span> ${fmtAUD.format(s.avgBond)}</div>
-    <div><span class="badge">Percent of rentals with any bond withheld from tenant</span> ${fmtPct1.format(s.pctWithheld)}%</div>
+    <div><span class="badge">Average tenancy length (days)</span> ${fmtNum.format(s.avgDays)}</div>
+    <div><span class="badge">Average total bond</span> ${fmtAUD.format(s.avgBond)}</div>
+    <div><span class="badge">Percent of rentals with any bond withheld</span> ${fmtPct1.format(s.pctWithheld)}%</div>
   </div>`;
 }
 function typesHTML(freq){
@@ -51,18 +68,17 @@ function typesHTML(freq){
   }).join('');
 }
 function cardHTML(pc, agg, rank, rankN){
-  const name = getSuburbName(pc);
-  const title = name && name.length ? name : `Postcode ${pc}`;
-  const pcBadge = `<span class="badge">Postcode</span> <span class="mono">${pc}</span>`;
+  const title = displayName(pc);
   const rlabel = rankN>0 ? `Rank: ${rank}/${rankN}` : "No rank";
+  const pcBadge = `<span class="badge">Postcode</span> <span class="mono">${pc}</span>`;
   return `<article class="card-item" data-postcode="${pc}">
     <header><div class="title">${title}</div><div class="badge">${rlabel}</div></header>
     <div class="suburbs">${pcBadge}</div>
     <div class="kv" style="margin-top:6px">
       <div><span class="badge">Percent of bond withheld from tenant</span> ${fmtPct1.format(agg.avgPercent)}%</div>
-      <div><span class="badge">Average days bond held</span> ${fmtNum.format(agg.avgDays)}</div>
-      <div><span class="badge">Average total bond (AUD)</span> ${fmtAUD.format(agg.avgBond)}</div>
-      <div><span class="badge">Percent of rentals with any bond withheld from tenant</span> ${fmtPct1.format(agg.pctWithheld)}%</div>
+      <div><span class="badge">Average tenancy length (days)</span> ${fmtNum.format(agg.avgDays)}</div>
+      <div><span class="badge">Average total bond</span> ${fmtAUD.format(agg.avgBond)}</div>
+      <div><span class="badge">Percent of rentals with any bond withheld</span> ${fmtPct1.format(agg.pctWithheld)}%</div>
       <div><span class="badge">Data points</span> ${fmtNum.format(agg.count)}</div>
     </div>
     <div class="types">${typesHTML(agg.typeCounts)}</div>
@@ -75,9 +91,9 @@ function popupHTML(pc, agg, rank, rankN){
     <div style="font-weight:700; margin-bottom:6px">${title}</div>
     <div class="kv" style="grid-template-columns: 1fr; gap:4px">
       <div><span class="badge">Percent of bond withheld from tenant</span> ${fmtPct1.format(agg.avgPercent)}%</div>
-      <div><span class="badge">Average days bond held</span> ${fmtNum.format(agg.avgDays)}</div>
-      <div><span class="badge">Average total bond (AUD)</span> ${fmtAUD.format(agg.avgBond)}</div>
-      <div><span class="badge">Percent of rentals with any bond withheld from tenant</span> ${fmtPct1.format(agg.pctWithheld)}%</div>
+      <div><span class="badge">Average tenancy length (days)</span> ${fmtNum.format(agg.avgDays)}</div>
+      <div><span class="badge">Average total bond</span> ${fmtAUD.format(agg.avgBond)}</div>
+      <div><span class="badge">Percent of rentals with any bond withheld</span> ${fmtPct1.format(agg.pctWithheld)}%</div>
       <div><span class="badge">Data points</span> ${fmtNum.format(agg.count)}</div>
       <div><span class="badge">Rank</span> ${rlabel}</div>
     </div>
@@ -112,6 +128,7 @@ async function loadAll(){
   initMap();
   initUI();
   initAboutModal();
+  initHelpTips();
   update();
 }
 
@@ -186,6 +203,19 @@ function initMap(){
     }
   }).addTo(MAP.map);
   MAP.map.fitBounds(MAP.layer.getBounds());
+  addLegend();
+}
+
+function addLegend(){
+  const legend = L.control({position:'bottomleft'});
+  legend.onAdd = function(){
+    const box = L.DomUtil.create('div','legend-control');
+    const inner = L.DomUtil.create('div','legend', box);
+    MAP.legendEl = inner;
+    return box;
+  };
+  legend.addTo(MAP.map);
+  updateLegend();
 }
 
 function initUI(){
@@ -220,6 +250,19 @@ function initAboutModal(){
   openBtn.addEventListener('click', open);
   closes.forEach(el => el.addEventListener('click', (e)=>{ if(e.target.dataset.close || e.currentTarget.classList.contains('close')) close(); }));
   window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') close(); });
+}
+
+function initHelpTips(){
+  document.querySelectorAll('.help-tip').forEach(btn => {
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.help-tip.help-open').forEach(b => { if(b!==btn) b.classList.remove('help-open'); });
+      btn.classList.toggle('help-open');
+    });
+  });
+  document.addEventListener('click', ()=>{
+    document.querySelectorAll('.help-tip.help-open').forEach(b => b.classList.remove('help-open'));
+  });
 }
 
 function passesFilters(r){
@@ -263,10 +306,11 @@ function update(){
 
   // Colouring and ordering follow selected sort metric
   const metricKeyRank = FILTERS.sortBy === 'percent' ? 'avgPercent' : (FILTERS.sortBy === 'days' ? 'avgDays' : (FILTERS.sortBy === 'withheld' ? 'pctWithheld' : 'avgBond'));
-  const ranked = aggEntries.slice().sort((a,b)=> a[1][metricKeyRank] - b[1][metricKeyRank]);
+  let ranked = aggEntries.slice().sort((a,b)=> a[1][metricKeyRank] - b[1][metricKeyRank]);
+  if(FILTERS.sortDir === 'desc') ranked.reverse();
   const rankIndex = new Map(); ranked.forEach(([pc,a], i)=> rankIndex.set(pc, i+1));
   const rankN = ranked.length;
-  MAP.rankIndex = rankIndex; MAP.rankN = rankN;
+  MAP.rankIndex = rankIndex; MAP.rankN = rankN; updateLegend();
   const aggMap = new Map(aggEntries); MAP.aggByPc = aggMap;
 
   // Sort cards by current sort metric

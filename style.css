@@ -1,15 +1,13 @@
 *{box-sizing:border-box}
 :root{ --bg:#0b0c0f; --panel:#111318; --card:#151821; --muted:#8a93a6; --text:#e5e7ef; --accent:#53d769; --border:#232633; }
 html,body{height:100%}
-body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; color:var(--text); background:var(--bg) }
-.topbar{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:linear-gradient(180deg, #0b0c10, #0b0c0f); position:sticky; top:0; z-index:20 }
+body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial; color:var(--text); background:var(--bg) }
+.topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); background:linear-gradient(180deg, #0b0c10, #0b0c0f); position:sticky; top:0; z-index:4000 }
 .topbar .brand h1{margin:0; font-size:20px}
-.topbar .brand .subtle{margin:4px 0 0; color:var(--muted); font-size:13px}
-.legend{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:12px}
-.legend .gradient{ width:180px; height:10px; border-radius:999px; border:1px solid var(--border); background: linear-gradient(90deg, #2ecc71, #e67e22, #e74c3c) }
+.topbar .brand #intro{margin:6px 0 0; color:var(--muted); font-size:13px; max-width: 72ch}
 
 .layout{display:grid; grid-template-columns: 340px 1fr; grid-template-areas: 'controls viz'; min-height: calc(100vh - 64px)}
-.controls{ grid-area: controls; padding:16px; border-right:1px solid var(--border); background:var(--panel); overflow:auto; height: calc(100vh - 64px) }
+.controls{ grid-area: controls; padding:16px; border-right:1px solid var(--border); background:var(--panel); height:auto; overflow:visible }
 .viz{ grid-area: viz; display:flex; flex-direction:column; min-width:0 }
 #map{ height:55vh; width:100% }
 .list{ flex:1; overflow:auto; margin:16px }
@@ -18,15 +16,18 @@ body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, 
 .controls .card{ margin:0 0 16px 0 }
 .card h2{ margin:0 0 12px 0; font-size:16px }
 
-.control-block{margin:12px 0}
-.control-block label{display:block; margin:0 0 6px 0; color:#c7cce0; font-weight:600; font-size:13px}
+/* No sticky sort card */
+.sort-card{ position: static }
+
+.control-block{margin:12px 0; position:relative; padding-right:24px}
+.control-block > label{display:block;margin:0 0 8px;padding-right:24px;color:#c7cce0;font-weight:600;font-size:13px;line-height:1.2}
 .chips{display:flex; flex-wrap:wrap; gap:8px}
 .chips label{ background:#1b1f2b; border:1px solid var(--border); padding:6px 8px; border-radius:10px; font-size:12px }
 .range-vals{display:flex; align-items:center; gap:8px; margin-top:8px}
 .range-vals input{ width:100%; background:#0d0f14; border:1px solid var(--border); color:var(--text); padding:6px 8px; border-radius:8px }
 .control-flex{display:flex; gap:12px; flex-wrap:wrap}
-.control-flex .control-block{ flex:1 1 180px; min-width:180px }
-.controls select, .controls input[type="number"]{ width:100%; box-sizing:border-box; background:#0d0f14; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px }
+.control-flex .control-block{ flex:1 1 180px; min-width:220px }
+.controls select, .controls input[type="number"]{ width:100%; background:#0d0f14; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px }
 .control-actions{display:flex; gap:8px; margin-top:8px}
 button{ background:#202739; color:#e5e7ef; border:1px solid var(--border); padding:8px 10px; border-radius:10px; cursor:pointer }
 button:hover{filter:brightness(1.08)}
@@ -52,53 +53,45 @@ footer{ color:var(--muted); font-size:12px; text-align:center; padding:12px }
 .leaflet-container { background:#0d0f14; border-bottom:1px solid var(--border) }
 .leaflet-control-attribution{ display:block !important; font-size:11px; background: rgba(10,12,16,0.65); color:#c7cce0; border:1px solid var(--border); border-radius:8px; padding:3px 6px; backdrop-filter: blur(3px); }
 .leaflet-control-attribution a{ color:#9fb0ff; }
+.leaflet-top{ top: 10px; }
 
-/* Sort card prominence */
-.sort-card{ position: sticky; top: 8px; z-index: 10 }
+/* Legend in map */
+.legend-control{background:rgba(10,12,16,.65);color:#c7cce0;border:1px solid var(--border);border-radius:10px;padding:6px 10px;backdrop-filter:blur(3px)}
+.legend-control .legend{display:flex;align-items:center;gap:8px;font-size:12px}
+.legend-control .gradient{width:140px;height:10px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(90deg,#2ecc71,#e67e22,#e74c3c)}
 
-/* Slider improvements so tooltips don't cover inputs */
-.control-block .noUi-target{ margin:10px 0 28px; } /* extra space for tooltips */
-.noUi-tooltip{
-  display:none; /* show only on hover/drag */
-  background:#0d0f14;
-  color:var(--text);
-  border:1px solid var(--border);
-  border-radius:6px;
-  padding:2px 6px;
-  font-size:11px;
-  white-space:nowrap;
-  transform: translateY(-6px);
-}
-.noUi-handle:hover .noUi-tooltip,
-.noUi-active .noUi-tooltip{ display:block; }
+/* Slider spacing */
+.control-block .noUi-target{ margin:10px 0 28px; }
+.noUi-tooltip{ display:none; background:#0d0f14; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:2px 6px; font-size:11px; white-space:nowrap; transform: translateY(-6px) }
+.noUi-handle:hover .noUi-tooltip, .noUi-active .noUi-tooltip{ display:block }
 
-/* Modal */
-.modal{ position: fixed; inset:0; display:none; z-index: 1000 }
-.modal.show{ display:block }
-.modal-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); }
-.modal-dialog{ position:relative; background:#151821; color:#e5e7ef; border:1px solid var(--border); border-radius: 14px; width:min(780px, 92vw); margin: 8vh auto 0; box-shadow: 0 18px 48px rgba(0,0,0,0.45); }
-.modal-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border) }
-.modal-head h3{ margin:0; font-size:18px }
-.modal-body{ padding:14px; line-height:1.45 }
-.modal-body ul{ margin:6px 0 10px 18px }
-.modal-foot{ display:flex; justify-content:flex-end; gap:8px; padding:12px 14px; border-top:1px solid var(--border) }
-.modal .close{ background:#202739; color:#e5e7ef; border:1px solid var(--border); padding:6px 10px; border-radius:10px; cursor:pointer; }
-.modal .close.primary{ background:#29406a }
+/* Help buttons / tooltips */
+.help-tip{display:inline-flex;align-items:center;justify-content:center;position:absolute;top:0;right:0;z-index:31;width:18px;height:18px;margin-left:6px;font-size:12px;line-height:1;border-radius:999px;background:#243046;color:#d7def5;border:1px solid #2f3b58;cursor:pointer;vertical-align:middle}
+.tooltip{display:none; position:absolute; right:0; top:26px; z-index:30; max-width:360px; background:#0d0f14; color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.35); font-size:12px; line-height:1.35}
+.help-open + .tooltip{ display:block }
+@media (hover:hover){ .help-tip:hover + .tooltip{ display:block } }
+@media (max-width: 480px){ .tooltip{ max-width:86vw } }
 
 @media (max-width: 960px){
   .layout{ grid-template-columns: 1fr; grid-template-areas: 'controls' 'viz' }
-  .controls{ order:2; height:auto }
+  .controls{ grid-area: controls; padding:16px; border-right:1px solid var(--border); background:var(--panel); height:auto; overflow:visible }
   #map{ height:60vh }
   .controls .card{ position: static }
-  .control-block label{ font-size:14px }
-  .chips label{ padding:8px 10px; font-size:13px }
-  .range-vals input{ padding:8px 10px; }
-  .modal-dialog{ margin: 6vh auto 0; width: 94vw }
 }
 
-/* subtle highlight when navigating from map -> card */
-@keyframes pulseCard { 
-  0% { box-shadow: 0 0 0 0 rgba(83,215,105,0.45); } 
-  100% { box-shadow: 0 0 0 14px rgba(83,215,105,0); } 
-}
-.pulse { animation: pulseCard 0.8s ease-out; }
+
+/* Modal layout & layering (above header/map/footer) */
+.modal{ position: fixed; inset: 0; display:none; z-index: 5000; }
+.modal.show{ display:block; }
+.modal-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,0.55); }
+.modal-dialog{ position:absolute; left:50%; top:6vh; transform: translateX(-50%);
+  width: min(820px, 92vw); background: var(--card); border:1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); overflow:hidden; }
+.modal-head, .modal-body, .modal-foot{ padding: 14px 16px; }
+.modal-head{ border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.modal-foot{ border-top:1px solid var(--border); display:flex; justify-content:center; }
+.modal .close{ background:#202739; border:1px solid var(--border); border-radius:10px; padding:6px 10px; cursor:pointer; }
+.modal .close.primary{ background:#2a3550; }
+
+/* Footer stays below content and under modal */
+footer{ position: relative; z-index: 1; border-top:1px solid var(--border); background: #0b0c0f; }

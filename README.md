@@ -1,8 +1,7 @@
 # NSW Rental Bond Outcomes (2024)
 
 A static, client-side site that maps NSW postcodes and summarises **rental bond refund outcomes** for 2024.
-Colour encodes rank by the chosen metric (green = lower, red = higher). Filters include dwelling type, days bond held, 
-data-point counts, and advanced ranges (percent withheld, any withheld, total bond). Cards and map popups show the same per-postcode summary.
+Sort and filter by percent withheld, any-withheld rate, days held, total bond, and dwelling type. Cards and map popups show the same per-postcode summary.
 
 **Live usage:** Host `./` on GitHub Pages or any static server.
 
