@@ -233,7 +233,7 @@ function passesFilters(r){
 function aggregate(rows){
   const byPC = new Map();
   for(const r of rows){
-    const pc = toKey(r.Postcode);
+    const pc = String(r.Postcode).padStart(4,'0');
     if(!byPC.has(pc)){ byPC.set(pc, { sumPercent:0, sumDays:0, sumBond:0, count:0, withheld:0, typeCounts:{F:0,H:0,T:0,O:0,U:0} }); }
     const a = byPC.get(pc);
     a.sumPercent += r['Percent To Agent'] || 0;
@@ -289,7 +289,7 @@ function update(){
 
   // Summary over kept postcodes
   const kept = new Set(aggEntries.map(([pc])=>pc));
-  const rowsForSummary = filtered.filter(r => kept.has(toKey(r.Postcode)));
+  const rowsForSummary = filtered.filter(r => kept.has(String(r.Postcode).padStart(4,'0')));
   const s = {
     records: rowsForSummary.length,
     postcodes: aggEntries.length,
@@ -311,7 +311,7 @@ function update(){
     el.addEventListener('mouseenter', ()=> { const layer = MAP.featureIndex.get(pc); if(layer) layer.setStyle({ weight: 3 }); });
     el.addEventListener('mouseleave', ()=> { const layer = MAP.featureIndex.get(pc); if(layer) layer.setStyle({ weight: 1 }); });
     el.addEventListener('click', ()=>{
-      const layer = MAP.featureIndex.get(pc); const info = aggMap.get(pc);
+      const layer = MAP.featureIndex.get(pc); const info = MAP.aggByPc.get(pc);
       if(layer && info){ const html = popupHTML(pc, info, rank, rankN); const center = layer.getBounds().getCenter(); layer.bindPopup(html, { maxWidth: 340 }).openPopup(center); MAP.map.panTo(center); }
     });
     frag.appendChild(el);
