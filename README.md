@@ -1,7 +1,11 @@
 # NSW Rental Bond Outcomes (2024)
 
+**Live site:** https://aussiedatagal.github.io/nsw-rent-bond-refunds/
+
 A static, client-side site that maps NSW postcodes and summarises **rental bond refund outcomes** for 2024.
 Sort and filter by percent withheld, any-withheld rate, days held, total bond, and dwelling type. Cards and map popups show the same per-postcode summary.
+
+[![Screenshot of the NSW Rental Bond Refunds map](./screenshot.png)](https://aussiedatagal.github.io/nsw-rent-bond-refunds/)
 
 **Live usage:** Host `./` on GitHub Pages or any static server.
 
